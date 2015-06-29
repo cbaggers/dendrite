@@ -1,9 +1,9 @@
 ;;;; jungl.asd
 
-(asdf:defsystem #:jungl
+(asdf:defsystem #:jungl.micro-l-system
   :description "Master package for all jungl packages"
   :author "Chris Bagley <techsnuffle@gmail.com>"
   :license "Specify license here"
   :serial t
-  :depends-on (#:jungl.micro-l-system)
-  :components ((:file "jungl/package")))
+  :components ((:file "jungl.micro-l-system/package")
+               (:file "jungl.micro-l-system/micro-l")))
