@@ -3,7 +3,8 @@
 (asdf:defsystem #:dendrite
   :description "Master package for all dendrite packages"
   :author "Chris Bagley <techsnuffle@gmail.com>"
-  :license "Specify license here"
+  :license "BSD 2 Clause"
   :serial t
-  :depends-on (#:dendrite.micro-l-system)
+  :depends-on (#:dendrite.micro-l-system
+	       #:dendrite.primitives)
   :components ((:file "dendrite/package")))
