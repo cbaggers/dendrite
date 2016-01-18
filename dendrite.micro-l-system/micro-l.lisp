@@ -1,4 +1,4 @@
-(in-package :jungl.micro-l-system)
+(in-package :dendrite.micro-l-system)
 
 (define-compiler-macro mapcat (function &rest lists)
   `(apply #'concatenate 'list (mapcar ,function ,@lists)))

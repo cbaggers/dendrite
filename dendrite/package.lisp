@@ -1,3 +1,3 @@
 ;;;; package.lisp
 
-(defpackage #:jungl (:use #:cl))
+(defpackage #:dendrite (:use #:cl))
