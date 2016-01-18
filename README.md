@@ -1,5 +1,5 @@
-This is the master package that references all jungl packages
+This is the master package that references all dendrite packages
 
-Jungl seeks to be a collection of procedural generation libraries.
+Dendrite seeks to be a collection of procedural generation libraries.
 
-Each can be loaded on their own or you can load `jungl` to load them all.
+Each can be loaded on their own or you can load `dendrite` to load them all.
