@@ -1,9 +1,6 @@
 
 (defpackage :dendrite.primitives
-  (:use :cl
-        :cl-game-math.base-vectors
-        :cl-game-math.base-matrices
-        :cl-game-math.base-maths)
+  (:use :cl :rtg-math :rtg-math.base-maths)
   (:export :latice-data
            :primitive-data
            :cap-data

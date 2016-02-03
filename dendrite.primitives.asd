@@ -5,6 +5,6 @@
   :author "Chris Bagley <techsnuffle@gmail.com>"
   :license "2 Clause BSD"
   :serial t
-  :depends-on (#:cl-game-math)
+  :depends-on (#:rtg-math)
   :components ((:file "dendrite.primitives/package")
                (:file "dendrite.primitives/primitives")))
