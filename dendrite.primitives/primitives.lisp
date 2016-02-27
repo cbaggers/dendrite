@@ -281,7 +281,7 @@
 
 (defun sphere-data (&key (radius 0.5) (lines-of-latitude 10)
                       (lines-of-longitude 10) (normals t) (tex-coords t))
-  (declare ((unsigned-byte 8) lines-of-longitude lines-of-latitude))
+  (declare (type (unsigned-byte 8) lines-of-longitude lines-of-latitude))
   ;; latitude  -  horizontal
   ;; longitude -  vertical
   (let ((faces (make-array (* 6 lines-of-latitude (* (1+ lines-of-longitude)))))
