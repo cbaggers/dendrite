@@ -1,9 +1,10 @@
 ;;;; dendrite.asd
 
 (asdf:defsystem #:dendrite.micro-l-system
-  :description "Master package for all dendrite packages"
+  :description "Tiniest L-System"
   :author "Chris Bagley <techsnuffle@gmail.com>"
-  :license "Specify license here"
+  :license "BSD 2 Clause"
+  #+asdf-unicode :encoding #+asdf-unicode :utf-8
   :serial t
   :components ((:file "dendrite.micro-l-system/package")
                (:file "dendrite.micro-l-system/micro-l")))

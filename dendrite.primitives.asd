@@ -4,6 +4,7 @@
   :description "Generates mesh data for primitives"
   :author "Chris Bagley <techsnuffle@gmail.com>"
   :license "2 Clause BSD"
+  #+asdf-unicode :encoding #+asdf-unicode :utf-8
   :serial t
   :depends-on (#:rtg-math)
   :components ((:file "dendrite.primitives/package")
