@@ -149,10 +149,12 @@
      '(0 1 2))))
 
 (defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
-  (let ((p1 (v! (- width) (- height) 0.0))
-        (p2 (v! width (- height) 0.0))
-        (p3 (v! width height 0.0))
-        (p4 (v! (- width) height 0.0)))
+  (let* ((width (/ width 2s0))
+         (height (/ height 2s0))
+         (p1 (v! (- width) (- height) 0.0))
+         (p2 (v! width (- height) 0.0))
+         (p3 (v! width height 0.0))
+         (p4 (v! (- width) height 0.0)))
     (list
      (if (not (or normals tex-coords))
          (list p1 p2 p3 p4)
