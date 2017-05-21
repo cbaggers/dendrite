@@ -10,7 +10,7 @@
     (list
      (loop :for y :upto x-segments :append
         (loop :for x :upto y-segments :collect
-           (let ((p (v:+ origin (v! (* x x-step) (* y y-step) 0))))
+           (let ((p (v:+ origin (v! (* x x-step) 0 (* y y-step)))))
              (if (not (or normals tex-coords))
                  p
                  `(,p

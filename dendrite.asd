@@ -7,5 +7,5 @@
   #+asdf-unicode :encoding #+asdf-unicode :utf-8
   :serial t
   :depends-on (#:dendrite.micro-l-system
-	       #:dendrite.primitives)
+               #:dendrite.primitives)
   :components ((:file "dendrite/package")))

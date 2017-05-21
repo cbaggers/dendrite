@@ -6,6 +6,7 @@
   :license "2 Clause BSD"
   #+asdf-unicode :encoding #+asdf-unicode :utf-8
   :serial t
-  :depends-on (#:rtg-math)
+  :depends-on (#:rtg-math #:cffi)
   :components ((:file "dendrite.primitives/package")
-               (:file "dendrite.primitives/primitives")))
+               (:file "dendrite.primitives/primitives")
+               (:file "dendrite.primitives/primitives-cffi")))

@@ -1,6 +1,6 @@
 
 (defpackage :dendrite.primitives
-  (:use :cl :rtg-math :rtg-math.base-maths)
+  (:use :cl :rtg-math :rtg-math.base-maths :cffi)
   (:export :latice-data
            :primitive-data
            :cap-data
@@ -12,4 +12,8 @@
            :cone-data
            :cylinder-data
            :prim-array
-           :swap-winding-order))
+           :swap-winding-order
+
+           ;; Versions returning cffi pointers
+           :latice-foreign
+           ))
