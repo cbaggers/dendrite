@@ -1,3 +1,4 @@
+;; dendrite.primitives
 
 (defpackage :dendrite.primitives
   (:use :cl :rtg-math :rtg-math.base-maths :cffi)
@@ -16,4 +17,5 @@
 
            ;; Versions returning cffi pointers
            :latice-foreign
-           ))
+           :box-foreign
+           :cube-foreign))

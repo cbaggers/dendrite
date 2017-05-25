@@ -5,12 +5,12 @@
 (defun latice-data (&key (width 1.0) (height 1.0) (x-segments 30)
                       (y-segments 30) (normals t) (tex-coords t))
   (let* ((x-step (/ width x-segments))
-         (y-step (/ height y-segments))
-         (origin (v! (- (/ width 2)) (- (/ height 2)) 0)))
+         (y-step (- (/ height y-segments)))
+         (origin (v! (- (/ width 2)) (/ height 2) 0)))
     (list
      (loop :for y :upto x-segments :append
         (loop :for x :upto y-segments :collect
-           (let ((p (v:+ origin (v! (* x x-step) 0 (* y y-step)))))
+           (let ((p (v:+ origin (v! (* x x-step) (* y y-step) 0))))
              (if (not (or normals tex-coords))
                  p
                  `(,p
@@ -19,14 +19,14 @@
                            (list (v! (/ x x-segments)
                                      (/ y y-segments)))))))))
      (let ((index 0))
-       (loop :for y :upto x-segments :append
-          (loop :for x :upto y-segments :append
+       (loop :for y :below x-segments :append
+          (loop :for x :below y-segments :append
              (list index
-                   (+ index 1)
                    (+ index y-segments 1)
-                   (+ index 1)
                    (+ index y-segments 1 1)
-                   (+ index y-segments 1))
+                   index
+                   (+ index y-segments 1 1)
+                   (+ index 1))
              :do (incf index)))))))
 
 (defun cylinder-data (&key (segments 10) (height 1) (radius 0.5)
@@ -149,28 +149,9 @@
      '(0 1 2))))
 
 (defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
-  (let* ((width (/ width 2s0))
-         (height (/ height 2s0))
-         (p1 (v! (- width) (- height) 0.0))
-         (p2 (v! width (- height) 0.0))
-         (p3 (v! width height 0.0))
-         (p4 (v! (- width) height 0.0)))
-    (list
-     (if (not (or normals tex-coords))
-         (list p1 p2 p3 p4)
-         (list `(,p1
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! 0.0 1.0))))
-               `(,p2
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! 1.0 1.0))))
-               `(,p3
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! 1.0 0.0))))
-               `(,p4
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! 0.0 0.0))))))
-     '(3 0 1 3 1 2))))
+  (latice-data :width width :height height
+               :x-segments 1 :y-segments 1
+               :normals normals :tex-coords tex-coords))
 
 (defun cube-data (&key (size 1.0) (normals t) (tex-coords t))
   (box-data :width size :height size :depth size :normals normals
