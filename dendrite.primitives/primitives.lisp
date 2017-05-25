@@ -31,7 +31,7 @@
 
 (defun cylinder-data (&key (segments 10) (height 1) (radius 0.5)
                         (normals t) (tex-coords t) (cap t))
-  (let* ((angle (/ (* pi 2) segments))
+  (let* ((angle (/ (* +pi+ 2) segments))
         (cap-data1 (when cap (cap-data :segments segments
                                        :y-pos 0
                                        :up-norm t
@@ -72,7 +72,7 @@
 
 (defun cap-data (&key (segments 10) (y-pos 0) (up-norm nil) (radius 0.5)
                    (normals t) (tex-coords t) (index-offset 0))
-  (let ((angle (/ (* pi 2) segments)))
+  (let ((angle (/ (* +pi+ 2) segments)))
     (list
      (cons
       (let ((p (v! 0 y-pos 0)))
@@ -94,7 +94,7 @@
 
 (defun cone-data (&key (segments 10) (height 1) (radius 0.5)
                     (normals t) (tex-coords t) (cap t))
-  (let ((angle (/ (* pi 2) segments))
+  (let ((angle (/ (* +pi+ 2) segments))
         (cap-data (when cap (cap-data :segments segments
                                       :y-pos 0
                                       :up-norm t
@@ -125,28 +125,6 @@
          :for index = (* 2 s) :append
          (list index (+ 1 index) (+ 3 index)))
       (second cap-data)))))
-
-(defun equilateral-triangle-data (&key (size 1.0) (normals t) (tex-coords t))
-  (let* ((hs (/ size 2))
-         (height (sqrt (+ (expt size 2) (expt hs 2))))
-         (hh (/ height 2))
-         (p1 (v! 0 hh 0.0))
-         (p2 (v! (- hs) (- hh) 0.0))
-         (p3 (v! hs (- hh) 0.0)))
-    (list
-     (if (not (or normals tex-coords))
-         (list p1 p2 p3)
-         (list `(,p1
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! 0.5 0.75))))
-               `(,p2
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! -0.5 0))))
-               `(,p3
-                 ,@(when normals `(,(v! 0.0 0.0 1.0)))
-                 ,@(when tex-coords `(,(v! 0.5 0))))
-               ))
-     '(0 1 2))))
 
 (defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
   (latice-data :width width :height height

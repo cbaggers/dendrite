@@ -8,7 +8,6 @@
            :plain-data
            :box-data
            :cube-data
-           :equilateral-triangle-data
            :sphere-data
            :cone-data
            :cylinder-data
