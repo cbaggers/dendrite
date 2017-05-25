@@ -1,6 +1,6 @@
 ;; dendrite.primitives
 
-(defpackage :dendrite.primitives
+(uiop:define-package :dendrite.primitives
   (:use :cl :rtg-math :rtg-math.base-maths :cffi)
   (:export :latice-data
            :primitive-data
@@ -20,4 +20,5 @@
            :box-foreign
            :cube-foreign
            :cone-foreign
-           :cylinder-foreign))
+           :cylinder-foreign
+           :sphere-foreign))

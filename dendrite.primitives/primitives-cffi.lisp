@@ -565,3 +565,55 @@
 
     (list verts-final verts-size
           indices-final index-size)))
+
+;;------------------------------------------------------------
+
+(defun sphere-foreign (&key (radius 0.5) (lines-of-latitude 30)
+                         (lines-of-longitude 30) (normals t) (tex-coords t))
+  (declare (type (unsigned-byte 8) lines-of-longitude lines-of-latitude))
+  ;; latitude  -  horizontal
+  ;; longitude -  vertical
+  (let* ((elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0)))
+         (verts-len (* (1+ lines-of-latitude) (* elem-size lines-of-longitude)))
+         (index-len (* 6 lines-of-latitude (* (1+ lines-of-longitude))))
+         ;;
+         (verts (foreign-alloc :float :count verts-len))
+         (verts-final (make-pointer (pointer-address verts)))
+         ;;
+         (indices (foreign-alloc :ushort :count index-len))
+         (indices-final (make-pointer (pointer-address indices)))
+         ;;
+         (lat-angle (/ +pi+ lines-of-latitude))
+         (lon-angle (/ (* 2.0 +pi+) lines-of-longitude))
+         (f-index 0)
+         (v-index 0)
+         (lines-of-long (float lines-of-longitude 0f0))
+         (lines-of-lat (float lines-of-latitude 0f0)))
+    (loop :for lat :upto lines-of-latitude :do
+       (let* ((part (* lat lat-angle))
+              (carry (* radius (sin part)))
+              (y (* radius (cos part))))
+         (loop :for lon :below lines-of-longitude :do
+            (let* ((part (* lon lon-angle))
+                   (x (* carry (sin part)))
+                   (z (* carry (cos part)))
+                   (pos (v! x y z))
+                   (normal (v3:normalize pos)))
+              (when (not (eql lat lines-of-latitude))
+                (let ((part (+ v-index lines-of-longitude)))
+                  (setf (mem-aref indices :ushort f-index) (1+ part)
+                        (mem-aref indices :ushort (+ f-index 1))  v-index
+                        (mem-aref indices :ushort (+ f-index 2)) part
+                        (mem-aref indices :ushort (+ f-index 3)) (1+ part)
+                        (mem-aref indices :ushort (+ f-index 4)) (1+ v-index)
+                        (mem-aref indices :ushort (+ f-index 5)) v-index
+                        f-index (+ 6 f-index)
+                        v-index (1+ v-index))))
+              (write-elem
+               verts
+               (x y z)
+               (normals (x normal) (y normal) (z normal))
+               (tex-coords (/ lon lines-of-long)
+                           (/ lat lines-of-lat)))))))
+    (list verts-final verts-len
+          indices-final index-len)))
