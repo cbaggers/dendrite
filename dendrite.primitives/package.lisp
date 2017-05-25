@@ -16,5 +16,8 @@
 
            ;; Versions returning cffi pointers
            :latice-foreign
+           :plain-foreign
            :box-foreign
-           :cube-foreign))
+           :cube-foreign
+           :cone-foreign
+           :cylinder-foreign))
