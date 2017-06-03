@@ -521,7 +521,7 @@
          ;;
          (elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0)))
          ;;
-         (verts-size (+ (* (1+ segments) elem-size)
+         (verts-size (+ (* (* 2 (1+ segments)) elem-size)
                         (if cap
                             (* 2 (%cap-vert-float-len segments normals tex-coords))
                             0)))
@@ -537,10 +537,9 @@
     (when cap
       (setf verts (%write-cap-verts verts segments 0f0 -1f0 radius normals tex-coords))
       (setf verts (%write-cap-verts verts segments height 1f0 radius normals tex-coords))
-      (%write-cap-indices indices segments 1f0 0)
-      (%write-cap-indices indices segments 1f0
-                          (* (%cap-vert-float-len segments normals tex-coords)
-                             elem-size)))
+      (setf indices (%write-cap-indices indices segments -1f0 0))
+      (setf indices (%write-cap-indices indices segments 1f0
+                                        (%cap-vert-len segments))))
 
     (loop :for s :upto segments
        :for ang = (* s angle)
@@ -559,16 +558,17 @@
         (normals (x normal) (y normal) (z normal))
         (tex-coords (/ ang pi-f) 1f0)))
 
-    (loop :for s :below segments :for index = (* 2 s) :do
-       (setf (mem-aref indices :ushort 0) index)
-       (setf (mem-aref indices :ushort 1) (+ 1 index))
-       (setf (mem-aref indices :ushort 2) (+ 3 index))
+    (let ((cap-len (* 2 (%cap-vert-len segments))))
+      (loop :for s :below segments :for index = (+ cap-len (* 2 s)) :do
+         (setf (mem-aref indices :ushort 0) index)
+         (setf (mem-aref indices :ushort 1) (+ 1 index))
+         (setf (mem-aref indices :ushort 2) (+ 3 index))
 
-       (setf (mem-aref indices :ushort 3) index)
-       (setf (mem-aref indices :ushort 4) (+ 3 index))
-       (setf (mem-aref indices :ushort 5) (+ 2 index))
+         (setf (mem-aref indices :ushort 3) index)
+         (setf (mem-aref indices :ushort 4) (+ 3 index))
+         (setf (mem-aref indices :ushort 5) (+ 2 index))
 
-       (incf-pointer indices (* 2 6)))
+         (incf-pointer indices (* 2 6))))
 
     (list verts-final verts-size
           indices-final index-size)))
