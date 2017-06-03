@@ -411,29 +411,34 @@
     (list verts-final verts-len
           indices index-len)))
 
-(defun %cap-index-len (segments)
+(defun %cap-index-float-len (segments)
   (* 3 (+ 1 segments)))
-
-(defun %cap-vert-len (segments normals tex-coords)
-  (let ((elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0))))
-    (* elem-size (+ 1 segments))))
 
 (defun %write-cap-indices (ptr segments norm-y index-offset)
   (let ((up-norm (> norm-y 0f0)))
     (if up-norm
-        (loop :for s :from (+ 1 index-offset)
-           :below (+ 1 segments index-offset)
-           :do
-           (setf (mem-aref ptr :ushort 0) index-offset)
-           (setf (mem-aref ptr :ushort 1) s)
-           (setf (mem-aref ptr :ushort 2) (1+ s)))
-        (loop :for s :from (+ 1 index-offset)
-           :below (+ 1 segments index-offset)
+        (loop :for s :from index-offset
+           :upto (+ index-offset segments)
            :do
            (setf (mem-aref ptr :ushort 0) index-offset)
            (setf (mem-aref ptr :ushort 1) (1+ s))
-           (setf (mem-aref ptr :ushort 2) s))))
-  (values))
+           (setf (mem-aref ptr :ushort 2) s)
+           (incf-pointer ptr (* 2 3)))
+        (loop :for s :from index-offset
+           :upto (+ index-offset segments)
+           :do
+           (setf (mem-aref ptr :ushort 0) index-offset)
+           (setf (mem-aref ptr :ushort 1) s)
+           (setf (mem-aref ptr :ushort 2) (1+ s))
+           (incf-pointer ptr (* 2 3)))))
+  ptr)
+
+(defun %cap-vert-float-len (segments normals tex-coords)
+  (let ((elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0))))
+    (* elem-size (%cap-vert-len segments))))
+
+(defun %cap-vert-len (segments)
+  (+ 2 segments))
 
 (defun %write-cap-verts (ptr segments y-pos norm-y radius normals tex-coords)
   (let ((angle (/ (* +pi+ 2f0) segments)))
@@ -450,7 +455,7 @@
         ((* radius (cos ang)) y-pos (* radius (sin ang)))
         (normals 0f0 norm-y 0f0)
         (tex-coords (sin ang) (cos ang)))))
-  (values))
+  ptr)
 
 (defun cone-foreign (&key (segments 10) (height 1) (radius 0.5f0)
                     (normals t) (tex-coords t) (cap t))
@@ -460,12 +465,12 @@
          ;;
          (elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0)))
          ;;
-         (verts-size (+ (* (1+ segments) elem-size)
+         (verts-size (+ (* (* 2 (1+ segments)) elem-size)
                         (if cap
-                            (%cap-vert-len segments normals tex-coords)
+                            (%cap-vert-float-len segments normals tex-coords)
                             0)))
          (index-size (+ (* segments 3)
-                        (if cap (%cap-index-len segments) 0)))
+                        (if cap (%cap-index-float-len segments) 0)))
          ;;
          (verts (foreign-alloc :float :count verts-size))
          (verts-final (make-pointer (pointer-address verts)))
@@ -474,8 +479,9 @@
          (indices-final (make-pointer (pointer-address indices))))
 
     (when cap
-      (%write-cap-verts verts segments 0f0 -1f0 radius normals tex-coords)
-      (%write-cap-indices indices segments 1f0 0))
+      (setf verts (%write-cap-verts verts segments 0f0 -1f0 radius normals
+                                    tex-coords))
+      (setf indices (%write-cap-indices indices segments -1f0 0)))
 
     (loop :for s :upto segments
        :for ang = (* (- s) angle)
@@ -497,11 +503,12 @@
         (normals (x normal) (y normal) (z normal))
         (tex-coords (/ ang pi-f) 0f0)))
 
-    (loop :for s :below segments :for index = (* 2 s) :do
-       (setf (mem-aref indices :ushort 0) index)
-       (setf (mem-aref indices :ushort 1) (+ 1 index))
-       (setf (mem-aref indices :ushort 2) (+ 3 index))
-       (incf-pointer indices (* 2 3)))
+    (let ((cap-len (%cap-vert-len segments)))
+      (loop :for s :below segments :for index = (+ cap-len (* 2 s)) :do
+         (setf (mem-aref indices :ushort 0) index)
+         (setf (mem-aref indices :ushort 1) (+ 1 index))
+         (setf (mem-aref indices :ushort 2) (+ 3 index))
+         (incf-pointer indices (* 2 3))))
 
     (list verts-final verts-size
           indices-final index-size)))
@@ -516,10 +523,10 @@
          ;;
          (verts-size (+ (* (1+ segments) elem-size)
                         (if cap
-                            (* 2 (%cap-vert-len segments normals tex-coords))
+                            (* 2 (%cap-vert-float-len segments normals tex-coords))
                             0)))
          (index-size (+ (* segments 6)
-                        (if cap (* 2 (%cap-index-len segments)) 0)))
+                        (if cap (* 2 (%cap-index-float-len segments)) 0)))
          ;;
          (verts (foreign-alloc :float :count verts-size))
          (verts-final (make-pointer (pointer-address verts)))
@@ -528,11 +535,11 @@
          (indices-final (make-pointer (pointer-address indices))))
 
     (when cap
-      (%write-cap-verts verts segments 0f0 -1f0 radius normals tex-coords)
-      (%write-cap-verts verts segments height 1f0 radius normals tex-coords)
+      (setf verts (%write-cap-verts verts segments 0f0 -1f0 radius normals tex-coords))
+      (setf verts (%write-cap-verts verts segments height 1f0 radius normals tex-coords))
       (%write-cap-indices indices segments 1f0 0)
       (%write-cap-indices indices segments 1f0
-                          (* (%cap-vert-len segments normals tex-coords)
+                          (* (%cap-vert-float-len segments normals tex-coords)
                              elem-size)))
 
     (loop :for s :upto segments
