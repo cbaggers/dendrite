@@ -8,5 +8,5 @@
   :serial t
   :depends-on (#:rtg-math #:cffi)
   :components ((:file "dendrite.primitives/package")
-               (:file "dendrite.primitives/primitives")
-               (:file "dendrite.primitives/primitives-cffi")))
+               (:file "dendrite.primitives/primitives-cffi")
+               (:file "dendrite.primitives/primitives")))
