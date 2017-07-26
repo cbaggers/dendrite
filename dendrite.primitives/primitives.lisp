@@ -2,7 +2,7 @@
 
 ;; {TODO} If only position, dont put in list, just return list of :vec3
 
-(defun latice-data (&key (width 1.0) (height 1.0) (x-segments 30)
+(defun lattice-data (&key (width 1.0) (height 1.0) (x-segments 30)
                       (y-segments 30) (normals t) (tex-coords t))
   (let* ((x-step (/ width x-segments))
          (y-step (- (/ height y-segments)))
@@ -127,7 +127,7 @@
       (second cap-data)))))
 
 (defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
-  (latice-data :width width :height height
+  (lattice-data :width width :height height
                :x-segments 1 :y-segments 1
                :normals normals :tex-coords tex-coords))
 
