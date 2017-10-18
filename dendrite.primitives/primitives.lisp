@@ -1,73 +1,81 @@
 (in-package :dendrite.primitives)
 
-;; {TODO} If only position, dont put in list, just return list of :vec3
+(defun ptr-to-lists (vptr iptr normals tex-coords
+                     vert-len idx-len uintp)
+  (let ((idx 0))
+    (labels ((get-v3 ()
+               (prog1 (v! (mem-aref vptr :float (+ idx 0))
+                          (mem-aref vptr :float (+ idx 1))
+                          (mem-aref vptr :float (+ idx 2)))
+                 (incf idx 3)))
+             (get-v2 ()
+               (prog1 (v! (mem-aref vptr :float (+ idx 0))
+                          (mem-aref vptr :float (+ idx 1)))
+                 (incf idx 2))))
+      (list (cond
+              ((and normals tex-coords)
+               (loop :for y :below vert-len :collect
+                  (list (get-v3) (get-v3) (get-v2))))
+              (normals
+               (loop :for y :below vert-len :collect
+                  (list (get-v3) (get-v3))))
+              (tex-coords
+               (loop :for y :below vert-len :collect
+                  (list (get-v3) (get-v2))))
+              (t
+               (loop :for y :below vert-len :collect
+                  (get-v3))))
+            (if uintp
+                (loop :for i :below idx-len :collect
+                   (mem-aref iptr :uint i))
+                (loop :for i :below idx-len :collect
+                   (mem-aref iptr :ushort i)))))))
 
 (defun latice-data (&key (width 1.0) (height 1.0) (x-segments 30)
                       (y-segments 30) (normals t) (tex-coords t))
-  (let* ((x-step (/ width x-segments))
-         (y-step (- (/ height y-segments)))
-         (origin (v! (- (/ width 2)) (/ height 2) 0)))
-    (list
-     (loop :for y :upto x-segments :append
-        (loop :for x :upto y-segments :collect
-           (let ((p (v:+ origin (v! (* x x-step) (* y y-step) 0))))
-             (if (not (or normals tex-coords))
-                 p
-                 `(,p
-                   ,@(when normals (list (v! 0 1 0)))
-                   ,@(when tex-coords
-                           (list (v! (/ x x-segments)
-                                     (/ y y-segments)))))))))
-     (let ((index 0))
-       (loop :for y :below x-segments :append
-          (loop :for x :below y-segments :append
-             (list index
-                   (+ index y-segments 1)
-                   (+ index y-segments 1 1)
-                   index
-                   (+ index y-segments 1 1)
-                   (+ index 1))
-             :do (incf index)))))))
+  ;;
+  (destructuring-bind (vptr vlen iptr ilen)
+      (latice-foreign :width width :height height
+                      :x-segments x-segments :y-segments y-segments
+                      :normals normals :tex-coords tex-coords)
+    (declare (ignore vlen))
+    (let ((vert-len (* (1+ y-segments) (1+ x-segments))))
+      (ptr-to-lists vptr iptr normals tex-coords vert-len ilen t))))
+
+(defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
+  (latice-data :width width :height height
+               :x-segments 1 :y-segments 1
+               :normals normals :tex-coords tex-coords))
 
 (defun cylinder-data (&key (segments 10) (height 1) (radius 0.5)
                         (normals t) (tex-coords t) (cap t))
-  (let* ((angle (/ (* +pi+ 2) segments))
-        (cap-data1 (when cap (cap-data :segments segments
-                                       :y-pos 0
-                                       :up-norm t
-                                       :radius radius
-                                       :normals normals
-                                       :tex-coords tex-coords
-                                       :index-offset (* 2 (1+ segments)))))
-        (cap-data2 (when cap (cap-data :segments segments
-                                       :y-pos height
-                                       :up-norm nil
-                                       :radius radius
-                                       :normals normals
-                                       :tex-coords tex-coords
-                                       :index-offset (+ (* 2 (1+ segments))
-                                                        (length (first cap-data1)))))))
-    (list
-     (append
-      (loop :for s :upto segments
-         :for ang = (* s angle)
-         :for normal = (v:normalize (v! (cos ang) 0 (sin ang)))
-         :for p1 = (v! (* radius (cos ang)) 0 (* radius (sin ang)))
-         :for p2 = (v! (* radius (cos ang)) height (* radius (sin ang)))
-         :collect
-         (if (not (or normals tex-coords))
-             p1 `(,p1 ,@(when normals (list normal))
-                      ,@(when tex-coords (list (v! 0.5 0.5)))))
-         :collect
-         (if (not (or normals tex-coords))
-             p2 `(,p2 ,@(when normals (list normal))
-                      ,@(when tex-coords (list (v! (sin ang) (cos ang)))))))
-      (first cap-data1) (first cap-data2))
-     (append
-      (loop :for s :below segments :for index = (* 2 s) :append
-         (list index (+ index 1) (+ index 3)
-               index (+ index 3) (+ index 2)))
-       (second cap-data1) (second cap-data2)))))
+  (destructuring-bind (vptr vlen iptr ilen)
+      (cylinder-foreign :segments segments :height height :radius radius
+                        :normals normals :tex-coords tex-coords :cap cap)
+    (let* ((elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0)))
+           (vert-len (/ vlen elem-size)))
+      (ptr-to-lists vptr iptr normals tex-coords vert-len ilen nil))))
+
+(defun cone-data (&key (segments 10) (height 1) (radius 0.5)
+                        (normals t) (tex-coords t) (cap t))
+  (destructuring-bind (vptr vlen iptr ilen)
+      (cone-foreign :segments segments :height height :radius radius
+                    :normals normals :tex-coords tex-coords :cap cap)
+    (let* ((elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0)))
+           (vert-len (/ vlen elem-size)))
+      (ptr-to-lists vptr iptr normals tex-coords vert-len ilen nil))))
+
+
+(defun sphere-data (&key (radius 0.5) (lines-of-latitude 30)
+                      (lines-of-longitude 30) (normals t) (tex-coords t))
+  (destructuring-bind (vptr vlen iptr ilen)
+      (sphere-foreign :radius radius
+                      :lines-of-latitude lines-of-latitude
+                      :lines-of-longitude lines-of-longitude
+                      :normals normals :tex-coords tex-coords)
+    (let* ((elem-size (+ 3 (if normals 3 0) (if tex-coords 2 0)))
+           (vert-len (/ vlen elem-size)))
+      (ptr-to-lists vptr iptr normals tex-coords vert-len ilen nil))))
 
 
 (defun cap-data (&key (segments 10) (y-pos 0) (up-norm nil) (radius 0.5)
@@ -90,46 +98,6 @@
         :append (if up-norm
                     (list index-offset s (1+ s))
                     (list index-offset (1+ s) s))))))
-
-
-(defun cone-data (&key (segments 10) (height 1) (radius 0.5)
-                    (normals t) (tex-coords t) (cap t))
-  (let ((angle (/ (* +pi+ 2) segments))
-        (cap-data (when cap (cap-data :segments segments
-                                      :y-pos 0
-                                      :up-norm t
-                                      :radius radius
-                                      :normals normals
-                                      :tex-coords tex-coords
-                                      :index-offset (1+ (* 2 segments))))))
-    (list
-     (append
-      (loop :for s :upto segments
-         :for ang = (* (- s) angle)
-         :for normal = (v:normalize (v! (* height (cos ang))
-                                        radius
-                                        (* height (sin ang))))
-         :collect
-         (let ((p (v! 0 height 0)))
-           (if (not (or normals tex-coords))
-               p `(,p ,@(when normals (list normal))
-                      ,@(when tex-coords (list (v! 0.5 0.5))))))
-         :collect
-         (let ((p (v! (* radius (cos ang)) 0 (* radius (sin ang)))))
-           (if (not (or normals tex-coords))
-               p `(,p ,@(when normals (list normal))
-                      ,@(when tex-coords (list (v! (sin ang) (cos ang))))))))
-      (first cap-data))
-     (append
-      (loop :for s :below segments
-         :for index = (* 2 s) :append
-         (list index (+ 1 index) (+ 3 index)))
-      (second cap-data)))))
-
-(defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
-  (latice-data :width width :height height
-               :x-segments 1 :y-segments 1
-               :normals normals :tex-coords tex-coords))
 
 (defun cube-data (&key (size 1.0) (normals t) (tex-coords t))
   (box-data :width size :height size :depth size :normals normals
@@ -239,43 +207,6 @@
                        ,@(when tex-coords `(,(v! 0.0 0.0))))))
           (list 0 1 2 0 2 3 4 5 6 4 6 7 8 9 10 8 10 11 12 13 14 12 14 15 16 17
                 18 16 18 19 20 21 22 20 22 23))))
-
-(defun sphere-data (&key (radius 0.5) (lines-of-latitude 30)
-                      (lines-of-longitude 30) (normals t) (tex-coords t))
-  (declare (type (unsigned-byte 8) lines-of-longitude lines-of-latitude))
-  ;; latitude  -  horizontal
-  ;; longitude -  vertical
-  (let ((faces (make-array (* 6 lines-of-latitude (* (1+ lines-of-longitude)))))
-        (lat-angle (/ +pi+ lines-of-latitude))
-        (lon-angle (/ (* 2.0 +pi+) lines-of-longitude))
-        (f-index 0) (v-index 0))
-    (list (loop :for lat :upto lines-of-latitude :append
-             (let* ((part (* lat lat-angle))
-                    (carry (* radius (sin part)))
-                    (y (* radius (cos part))))
-               (loop :for lon :upto (1- lines-of-longitude) :collect
-                  (let* ((part (* lon lon-angle))
-                         (x (* carry (sin part)))
-                         (z (* carry (cos part)))
-                         (pos (v! x y z)))
-                    (when (not (eql lat lines-of-latitude))
-                      (let ((part (+ v-index lines-of-longitude)))
-                        (setf (aref faces f-index) (1+ part)
-                              (aref faces (+ f-index 1))  v-index
-                              (aref faces (+ f-index 2)) part
-                              (aref faces (+ f-index 3)) (1+ part)
-                              (aref faces (+ f-index 4)) (1+ v-index)
-                              (aref faces (+ f-index 5)) v-index
-                              f-index (+ 6 f-index)
-                              v-index (1+ v-index))))
-                    (if (not (or normals tex-coords))
-                        pos
-                        `(,pos
-                          ,@(when normals `(,(v3:normalize pos)))
-                          ,@(when tex-coords
-                                  `(,(v! (/ lon lines-of-longitude)
-                                         (/ lat lines-of-latitude))))))))))
-          (coerce faces 'list))))
 
 (defun swap-winding-order (data)
   (%swap-winding-order data nil nil))
