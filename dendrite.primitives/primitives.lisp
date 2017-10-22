@@ -31,11 +31,11 @@
                 (loop :for i :below idx-len :collect
                    (mem-aref iptr :ushort i)))))))
 
-(defun latice-data (&key (width 1.0) (height 1.0) (x-segments 30)
+(defun lattice-data (&key (width 1.0) (height 1.0) (x-segments 30)
                       (y-segments 30) (normals t) (tex-coords t))
   ;;
   (destructuring-bind (vptr vlen iptr ilen)
-      (latice-foreign :width width :height height
+      (lattice-foreign :width width :height height
                       :x-segments x-segments :y-segments y-segments
                       :normals normals :tex-coords tex-coords)
     (declare (ignore vlen))
@@ -43,7 +43,7 @@
       (ptr-to-lists vptr iptr normals tex-coords vert-len ilen t))))
 
 (defun plain-data (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
-  (latice-data :width width :height height
+  (lattice-data :width width :height height
                :x-segments 1 :y-segments 1
                :normals normals :tex-coords tex-coords))
 

@@ -20,11 +20,11 @@
        (incf-pointer ,ptr (* 2 4)))))
 
 (defun plain-foreign (&key (width 1.0) (height 1.0) (normals t) (tex-coords t))
-  (latice-foreign :width width :height height
+  (lattice-foreign :width width :height height
                   :x-segments 1 :y-segments 1
                   :normals normals :tex-coords tex-coords))
 
-(defun latice-foreign (&key (width 1.0) (height 1.0) (x-segments 30)
+(defun lattice-foreign (&key (width 1.0) (height 1.0) (x-segments 30)
                          (y-segments 30) (normals t) (tex-coords t))
   (let* ((x-step (/ width x-segments))
          (y-step (/ height y-segments))

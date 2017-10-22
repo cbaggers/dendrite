@@ -2,7 +2,7 @@
 
 (uiop:define-package :dendrite.primitives
   (:use :cl :rtg-math :rtg-math.base-maths :cffi)
-  (:export :latice-data
+  (:export :lattice-data
            :primitive-data
            :cap-data
            :plain-data
@@ -15,7 +15,7 @@
            :swap-winding-order
 
            ;; Versions returning cffi pointers
-           :latice-foreign
+           :lattice-foreign
            :plain-foreign
            :box-foreign
            :cube-foreign
